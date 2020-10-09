@@ -1,0 +1,129 @@
+---
+title: "Intro2Rmarkdown"
+author: "Nicholas Baetge"
+date: "10/9/2020"
+output: github_document
+---
+
+# title
+## title
+### title
+
+basic text.
+
+*italicize* single asterisks
+
+**bold** double asterisks
+
+1. make
+2. numbered
+3. lists
+
+we can make:
+
+- unumbered
+- lists
+
+[link here](https://www.google.com)
+
+
+# Load Libraries
+
+to add code, make a chunk by clicking (Insert > R) 
+
+```{r load packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+# install.packages("RColorBrewer")
+library(RColorBrewer)
+```
+
+or by using shortcuts. on a mac: cmd + alt + i, on a pc: ctrl + alt + i
+
+# Load data
+
+```{r}
+socal.fires <- readRDS("~/GITHUB/144l_students/Output_Data/week1/socal_fires_data.rds")
+# socal.fires <- read_csv("~/GITHUB/144l_students/Output_Data/week1/socal_fires_data.csv")
+```
+
+# Look at data
+
+```{r}
+glimpse(socal.fires)
+```
+
+# Make plot dataframe
+
+```{r}
+plot.data <- socal.fires %>%
+  rename(county = County_Unit,
+         fire = Fire_Name,
+         start = Start_Date,
+         end = Controlled_Date,
+         acres = Total_Acres_Burned,
+         cause = Cause) %>%
+  mutate(county = ifelse(fire == "THOMAS", "VENTURA", county),
+         year = year(start))
+```
+
+```{r echo = F}
+glimpse(plot.data)
+```
+
+# Summary Statistics and *group_by()*
+
+```{r}
+summary.data <- plot.data %>%
+  group_by(county) %>% 
+  summarize(total_acres = sum(acres)) %>%
+  arrange(desc(total_acres)) %>% 
+  ungroup()
+```
+
+
+```{r}
+county_year_summary.data <- plot.data %>% 
+  group_by(county, year) %>% 
+  summarize(total_acres = sum(acres)) %>% 
+  arrange(desc(year), desc(total_acres)) %>% 
+  ungroup() 
+  
+```
+
+
+# Plot data
+
+```{r}
+ggplot(summary.data, aes(x = county, y = total_acres)) +
+  geom_col() +
+  labs(x = "County", y = "Total Acres Burned") +
+  theme_bw() +
+  coord_flip()
+
+```
+
+```{r}
+summary_factor <- summary.data %>% 
+  mutate(county = factor(county, levels = county))
+```
+
+```{r fig.height=4, fig.width=6}
+ggplot(summary_factor, aes(x = county, y = total_acres)) +
+  geom_col(aes(fill = county)) +
+  labs(x = "County", y = "Total Acres Burned", title = "Total Acres Burned 2014 - 2018") +
+  scale_fill_brewer(palette = "Spectral") +
+  theme_bw() +
+  coord_flip() +
+  guides(fill = F)
+
+```
+
+
+
+
+
+
+
+
